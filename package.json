@@ -1,0 +1,19 @@
+{
+  "name": "solartherm-sih26051",
+  "version": "1.0.0",
+  "description": "SOLARTHERM: Area-Specific Thermal Shelter Intelligence Platform for High-Altitude Cold Environments (SIH26051)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "solartherm",
+    "sih26051",
+    "thermal-shelter",
+    "passive-solar",
+    "ladakh",
+    "transient-thermal-modeling"
+  ],
+  "author": "SOLARTHERM Engineering Team",
+  "license": "MIT"
+}

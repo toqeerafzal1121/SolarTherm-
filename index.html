@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOLARTHERM | Area-Specific Thermal Shelter Intelligence Platform (SIH26051)</title>
+  <meta name="description" content="Physics-based parametric 3D digital twin and transient thermal intelligence platform for high-altitude cold climate shelters in Ladakh. Smart India Hackathon 2026 Problem Statement SIH26051." />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- External Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+  <!-- ==========================================================
+       TOP APPLICATION HEADER
+       ========================================================== -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo-icon">▲</div>
+      <div>
+        <div class="brand-title">SOLARTHERM</div>
+        <div class="brand-sub">Area-Specific Thermal Shelter Intelligence · SIH26051</div>
+      </div>
+    </div>
+
+    <!-- Active Site Info Pill (matching design) -->
+    <div class="header-site-pill">
+      <div class="site-pill-item">
+        <span>📍</span>
+        <strong id="headerSiteName">Ladakh, India</strong>
+      </div>
+      <div class="site-pill-item cold">
+        <span>❄️</span>
+        <strong id="headerSiteTemp">-22°C</strong>
+        <span>Winter Design Temp</span>
+      </div>
+      <div class="site-pill-item amber">
+        <span>☀️</span>
+        <strong id="headerSiteSolar">5.5 kWh/m²/day</strong>
+        <span>Solar Resource (GHI)</span>
+      </div>
+      <div class="site-pill-item">
+        <span>🏔️</span>
+        <strong id="headerSiteAlt">3,505 m</strong>
+        <span>Altitude</span>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <button id="themeToggleBtn" class="mode-toggle" title="Toggle Theme" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); color: #fff; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 13px;">🌙</button>
+      <label class="theme-toggle-label">
+        <input type="checkbox" id="themeToggleCheckbox" checked />
+        <span>Dark Mode</span>
+      </label>
+      <button class="btn-pitch-mode" id="btnOpenAIAgent" style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(2,132,199,0.2)); border-color: rgba(245,158,11,0.5);">🤖 AI Agent</button>
+      <div class="user-badge" title="Engineer Profile">TA</div>
+    </div>
+  </header>
+
+  <!-- ==========================================================
+       WORKFLOW NAVIGATION TABS
+       ========================================================== -->
+  <nav class="workflow-nav-bar">
+    <div class="workflow-tabs-container">
+      <button class="nav-workflow-tab active" data-tab="climate">
+        <span class="tab-num">1</span>
+        <span>Climate & Sites</span>
+      </button>
+      <button class="nav-workflow-tab" data-tab="designer">
+        <span class="tab-num">2</span>
+        <span>Shelter Designer</span>
+      </button>
+      <button class="nav-workflow-tab" data-tab="simulation">
+        <span class="tab-num">3</span>
+        <span>Simulation</span>
+      </button>
+      <button class="nav-workflow-tab" data-tab="optimization">
+        <span class="tab-num">4</span>
+        <span>Optimization</span>
+      </button>
+      <button class="nav-workflow-tab" data-tab="sandbox">
+        <span class="tab-num">5</span>
+        <span>Design Sandbox</span>
+      </button>
+      <button class="nav-workflow-tab" data-tab="validation">
+        <span class="tab-num">6</span>
+        <span>Validation</span>
+      </button>
+      <button class="nav-workflow-tab" data-tab="report">
+        <span class="tab-num">7</span>
+        <span>Report</span>
+      </button>
+      <button class="nav-workflow-tab" data-tab="ai-agent">
+        <span class="tab-num">8</span>
+        <span>🤖 AI Agent</span>
+      </button>
+    </div>
+
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button id="btnOpenAssumptions" class="btn-cad" style="border-color: rgba(255,255,255,0.2);">ℹ️ Assumptions</button>
+      <button id="btnRunSimHeader" class="btn-update-design" style="padding: 5px 14px; font-size: 11.5px;">▶ Run Simulation</button>
+      <button id="btnExportReportHeader" class="btn-cad" style="border-color: rgba(255,255,255,0.2); font-size: 11.5px; padding: 5px 12px;">📄 Export Report</button>
+    </div>
+  </nav>
+
+  <!-- Persistent Model Status Strip -->
+  <div class="model-status-strip">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="color: var(--text-muted);">Model Status:</span>
+      <span id="globalModelStatusBadge" class="status-badge status-ready">MODEL READY</span>
+      <span style="color: var(--text-muted); margin-left: 12px;">Twin ID:</span>
+      <strong style="color: var(--accent-blue); font-family: var(--font-mono);">SHELTER-001</strong>
+    </div>
+    <div style="color: var(--text-muted);">
+      Workflow: <strong>CAPTURE → STORE → RETAIN → OPTIMIZE</strong>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       TAB 1: CLIMATE & SITES
+       ========================================================== -->
+  <main id="view-climate" class="app-page-view active">
+    <div class="screen-title-section">
+      <h1 class="screen-h1">Climate & High-Altitude Research Sites</h1>
+      <p class="screen-sub">Meteorological boundary conditions and solar potential for Ladakh cold-climate shelter engineering.</p>
+    </div>
+
+    <div class="climate-layout">
+      <!-- Leaflet Map Container -->
+      <div class="eng-card climate-map-card" style="position: relative; display: flex; flex-direction: column; min-height: 740px;">
+        <div class="eng-card-header" style="flex-wrap: wrap; gap: 8px; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="header-title">🗺️ High-Altitude Geospatial GIS Map · Ladakh Climate Zones</div>
+            <div class="map-scale-controls" style="display: flex; gap: 4px; align-items: center; margin-left: 6px;">
+              <span style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Scale:</span>
+              <button id="btnScaleRegional" class="btn-secondary" style="font-size: 10.5px; padding: 2px 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: var(--text-secondary); cursor: pointer;" title="Regional View (Zoom 7)">1x Region</button>
+              <button id="btnScaleValley" class="btn-secondary" style="font-size: 10.5px; padding: 2px 8px; background: rgba(14, 165, 233, 0.2); border: 1px solid rgba(14, 165, 233, 0.4); border-radius: 4px; color: #38bdf8; font-weight: 600; cursor: pointer;" title="Valley Scale (Zoom 8.5)">2x Valley</button>
+              <button id="btnScaleOutpost" class="btn-secondary" style="font-size: 10.5px; padding: 2px 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: var(--text-secondary); cursor: pointer;" title="Outpost High Resolution (Zoom 11)">4x Outpost</button>
+            </div>
+            <button id="btnToggleMapFullscreen" class="btn-secondary" style="font-size: 11px; padding: 4px 10px; cursor: pointer; display: flex; align-items: center; gap: 5px; background: rgba(14, 165, 233, 0.15); border: 1px solid rgba(14, 165, 233, 0.3); color: var(--accent-blue); border-radius: 4px; transition: all 0.2s;" title="Expand GIS Map Fullscreen">
+              <span>⛶ Fullscreen</span>
+            </button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 11px; color: var(--text-secondary);">Select Site:</span>
+            <select id="siteSelector" class="eng-select" style="font-size: 11px; padding: 4px 8px; border-radius: 4px; background: rgba(15, 23, 42, 0.8); color: var(--text-primary); border: 1px solid var(--border-subtle);">
+              <option value="leh">Leh, Ladakh (3,505m)</option>
+              <option value="kargil">Kargil (2,676m)</option>
+              <option value="diskit">Diskit, Nubra (3,048m)</option>
+              <option value="siachen_type">Siachen Forward Post (5,400m)</option>
+              <option value="dras">Dras, Suru Valley (3,280m, -45°C)</option>
+              <option value="nyoma">Nyoma Advanced Post (4,180m)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="padding: 6px 12px; background: rgba(8, 14, 28, 0.7); border-bottom: 1px solid var(--border-subtle);">
+          <div id="mapApiStatus" class="map-api-badge">
+            <span class="pulse-dot"></span>
+            <span id="mapApiStatusText">🛰️ Open-Meteo & NASA POWER GIS API Active · Click or drag pin anywhere on map to sample live climate</span>
+          </div>
+        </div>
+
+        <div style="position: relative; flex: 1; min-height: 660px; overflow: hidden;">
+          <div id="climateMap" style="width: 100%; height: 100%; min-height: 660px;"></div>
+          
+          <!-- Map Legend Overlay -->
+          <div class="map-legend-overlay">
+            <div style="font-size: 10px; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Site Classification</div>
+            <div class="legend-item"><div class="legend-dot solar"></div><span>Primary Research Site</span></div>
+            <div class="legend-item"><div class="legend-dot moderate"></div><span>Secondary High-Altitude Site</span></div>
+            <div class="legend-item"><div class="legend-dot extreme"></div><span>Extreme Sub-Zero (&lt; -35°C)</span></div>
+            <div class="legend-item"><div class="legend-dot custom"></div><span>Interactive Sample Target (Live Stream)</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Site Selection & Diurnal Chart Sidebar -->
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="eng-card" style="flex: 1;">
+          <div class="eng-card-header">
+            <div class="header-title">🏔️ High Altitude Climate Zones</div>
+          </div>
+          <div id="siteSelectionGrid" style="padding: 12px; overflow-y: auto; max-height: 280px;"></div>
+        </div>
+
+        <div class="eng-card" style="flex: 1;">
+          <div class="eng-card-header">
+            <div class="header-title">📈 24-Hour Design Day Weather Profile</div>
+          </div>
+          <div style="padding: 10px; height: 210px;">
+            <canvas id="chartClimateDiurnal"></canvas>
+          </div>
+        </div>
+
+        <!-- Data Provenance Panel -->
+        <div class="eng-card" style="padding: 10px 14px; font-size: 11px;">
+          <div style="font-weight: 700; color: var(--accent-blue); margin-bottom: 4px;">DATA PROVENANCE & VERIFICATION</div>
+          <div>Source: <strong id="provDataSource">NASA POWER Climatology (20-Year Hourly)</strong></div>
+          <div>Status: <span id="provDataStatus" style="color: #10b981; font-weight: 600;">VERIFIED REFERENCE DATA</span></div>
+          <div>Processing: High-Altitude Atmospheric Pressure Derated</div>
+          <div style="margin-top: 2px;">Retrieved: <span id="provDataTime" style="color: var(--text-primary); font-family: var(--font-mono);">05 Sep 2026</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 24-HOUR LIVE WEATHER FORECAST DASHBOARD -->
+    <div id="liveWeatherForecastContainer" class="eng-card weather-forecast-card" style="margin-top: 20px;">
+      <!-- Populated dynamically by WeatherForecast engine -->
+    </div>
+  </main>
+
+  <!-- ==========================================================
+       TAB 2: SHELTER DESIGNER (SIGNATURE 3D WORKSPACE)
+       ========================================================== -->
+  <main id="view-designer" class="app-page-view">
+    <!-- Top 3-Column Grid -->
+    <div class="designer-top-grid">
+      
+      <!-- 1. Left: Design Model Tree -->
+      <div class="eng-card">
+        <div class="eng-card-header">
+          <div class="header-title">📁 Design Model Tree</div>
+          <span style="font-size: 11px; color: var(--text-muted);">v1.0.0</span>
+        </div>
+        <div class="tree-container">
+          <div class="tree-root">
+            <div class="tree-root-item">📦 Shelter-001</div>
+            
+            <div class="tree-group-title">Structure</div>
+            <div class="tree-item" data-comp="foundation"><span>🏛️</span> Foundation / Floor</div>
+            <div class="tree-item" data-comp="north_wall"><span>🧱</span> North Wall</div>
+            <div class="tree-item active" data-comp="south_wall"><span>🧱</span> South Wall</div>
+            <div class="tree-item" data-comp="east_wall"><span>🧱</span> East Wall</div>
+            <div class="tree-item" data-comp="west_wall"><span>🧱</span> West Wall</div>
+            <div class="tree-item" data-comp="roof"><span>🏠</span> Pitched Roof</div>
+
+            <div class="tree-group-title">Openings</div>
+            <div class="tree-item" data-comp="window_s"><span>🪟</span> South Glazing (W-01)</div>
+            <div class="tree-item" data-comp="door_d1"><span>🚪</span> Airlock Door (D-01)</div>
+
+            <div class="tree-group-title">Thermal Systems</div>
+            <div class="tree-item" data-comp="thermal_mass"><span>🔋</span> Thermal Storage Medium</div>
+
+            <div class="tree-group-title">Analysis</div>
+            <div class="tree-item" data-comp="solar_path"><span>☀️</span> Sun Path Trajectory</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Center: 3D Digital Shelter Viewport -->
+      <div class="eng-card viewport-card">
+        <!-- Viewport Toolbar -->
+        <div class="viewport-toolbar">
+          <button id="btnViewIso" class="viewport-btn active">ISO</button>
+          <button id="btnViewFront" class="viewport-btn">FRONT</button>
+          <button id="btnViewTop" class="viewport-btn">TOP</button>
+          <button id="btnViewSide" class="viewport-btn">SIDE</button>
+          <button id="btnViewSection" class="viewport-btn">SECTION</button>
+          <button id="btnViewExplode" class="viewport-btn">EXPLODE</button>
+          <button id="btnViewReset" class="viewport-btn">RESET</button>
+        </div>
+
+        <div class="viewport-right-tools">
+          <button id="btnSunPathToggle" class="viewport-btn active" title="Toggle Solar Path Arc">☀️ Sun Path</button>
+        </div>
+
+        <!-- Three.js Canvas Container -->
+        <div id="shelterViewport3D" class="three-container"></div>
+      </div>
+
+      <!-- 3. Right: Component Inspector -->
+      <div class="eng-card">
+        <div class="eng-card-header">
+          <div class="header-title">🏛️ Component Inspector</div>
+          <select id="inspectorCompSelect" style="background: rgba(7,12,24,0.8); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 11px; padding: 2px 6px; border-radius: 4px;">
+            <option value="south_wall">South Wall</option>
+            <option value="north_wall">North Wall</option>
+            <option value="roof">Pitched Roof</option>
+            <option value="window_s">South Glazing</option>
+            <option value="door_d1">Airlock Door</option>
+            <option value="foundation">Foundation / Floor</option>
+            <option value="thermal_mass">Thermal Storage</option>
+          </select>
+        </div>
+
+        <div class="inspector-tabs">
+          <div class="inspector-tab active" data-tab="properties">Properties</div>
+          <div class="inspector-tab" data-tab="thermal">Thermal Impact</div>
+          <div class="inspector-tab" data-tab="cost">Cost & Quantity</div>
+        </div>
+
+        <div class="inspector-body" id="inspectorContent">
+          <!-- Populated dynamically by designer-ui.js -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom 3-Column Grid -->
+    <div class="designer-bottom-grid">
+      
+      <!-- 1. Design Parameters -->
+      <div class="eng-card">
+        <div class="eng-card-header">
+          <div class="header-title">⚙️ Design Parameters</div>
+          <span style="font-size: 11px; color: var(--accent-amber);">Parametric Sync Active</span>
+        </div>
+
+        <div class="params-scroll">
+          <!-- Geometry -->
+          <div class="param-group">
+            <div class="param-group-title">📐 Geometry</div>
+            <div class="param-row">
+              <label>Length</label>
+              <input type="range" id="paramLength" min="3.0" max="12.0" step="0.5" value="6.0" />
+              <input type="number" id="paramLengthNum" value="6.0" step="0.5" />
+            </div>
+            <div class="param-row">
+              <label>Width</label>
+              <input type="range" id="paramWidth" min="2.5" max="8.0" step="0.5" value="4.0" />
+              <input type="number" id="paramWidthNum" value="4.0" step="0.5" />
+            </div>
+            <div class="param-row">
+              <label>Height</label>
+              <input type="range" id="paramHeight" min="2.2" max="4.5" step="0.1" value="2.8" />
+              <input type="number" id="paramHeightNum" value="2.8" step="0.1" />
+            </div>
+            <div class="param-row">
+              <label>Roof Pitch</label>
+              <input type="range" id="paramPitch" min="5" max="40" step="5" value="20" />
+              <input type="number" id="paramPitchNum" value="20" step="5" />
+            </div>
+            <div class="param-row">
+              <label>Orientation</label>
+              <input type="range" id="paramOrientation" min="0" max="360" step="15" value="180" />
+              <input type="number" id="paramOrientationNum" value="180" step="15" />
+            </div>
+          </div>
+
+          <!-- Envelope Materials -->
+          <div class="param-group">
+            <div class="param-group-title">🧱 Envelope Materials</div>
+            <div class="param-row">
+              <label>Wall Material</label>
+              <select id="paramWallMat" style="grid-column: span 2;">
+                <option value="plain_concrete">Plain Concrete (PBC)</option>
+                <option value="rammed_earth">Rammed Earth / Adobe</option>
+                <option value="puf_composite">PUF Insulated Sandwich Panel</option>
+                <option value="stone_masonry_xps">Granite Stone + 100mm XPS</option>
+                <option value="aac_block">Autoclaved Aerated Concrete</option>
+                <option value="sip_timber">Timber Frame + Rockwool</option>
+              </select>
+            </div>
+            <div class="param-row">
+              <label>Wall Thickness</label>
+              <input type="range" id="paramWallThick" min="0.10" max="0.50" step="0.02" value="0.20" />
+              <input type="number" id="paramWallThickNum" value="0.20" step="0.02" />
+            </div>
+            <div class="param-row">
+              <label>Roof Material</label>
+              <select id="paramRoofMat" style="grid-column: span 2;">
+                <option value="metal_corrugated">Metal Sheet + 150mm PUF</option>
+                <option value="timber_deck_rockwool">Timber Deck + Rockwool</option>
+                <option value="insulated_soil_turf">Earth Turf + Aerogel Base</option>
+              </select>
+            </div>
+            <div class="param-row">
+              <label>Roof Thickness</label>
+              <input type="range" id="paramRoofThick" min="0.08" max="0.40" step="0.02" value="0.15" />
+              <input type="number" id="paramRoofThickNum" value="0.15" step="0.02" />
+            </div>
+            <div class="param-row">
+              <label>Floor Material</label>
+              <select id="paramFloorMat" style="grid-column: span 2;">
+                <option value="concrete_slab_ground">Concrete Slab on Ground</option>
+                <option value="insulated_aerogel_floor">Concrete Slab + 100mm XPS</option>
+              </select>
+            </div>
+            <div class="param-row">
+              <label>Floor Thickness</label>
+              <input type="range" id="paramFloorThick" min="0.08" max="0.30" step="0.02" value="0.10" />
+              <input type="number" id="paramFloorThickNum" value="0.10" step="0.02" />
+            </div>
+          </div>
+
+          <!-- Glazing & Openings -->
+          <div class="param-group">
+            <div class="param-group-title">🪟 Glazing & Openings</div>
+            <div class="param-row">
+              <label>Window Type</label>
+              <select id="paramWinType" style="grid-column: span 2;">
+                <option value="double_pane">Double Pane Clear (U=2.8)</option>
+                <option value="single_clear">Single Pane Float (U=5.8)</option>
+                <option value="double_low_e">Double Low-E Argon (U=1.35)</option>
+                <option value="triple_low_e">Triple Low-E Krypton (U=0.75)</option>
+                <option value="vacuum_insulated">Vacuum Insulated (U=0.55)</option>
+              </select>
+            </div>
+            <div class="param-row">
+              <label>Window Area</label>
+              <input type="range" id="paramWinArea" min="1.0" max="8.0" step="0.5" value="3.5" />
+              <input type="number" id="paramWinAreaNum" value="3.5" step="0.5" />
+            </div>
+            <div class="param-row">
+              <label>Window Orient</label>
+              <select id="paramWinOrient" style="grid-column: span 2;">
+                <option value="south">South (Solar Capture)</option>
+                <option value="east">East</option>
+                <option value="west">West</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Thermal Storage -->
+          <div class="param-group">
+            <div class="param-group-title">🔋 Thermal Storage</div>
+            <div class="param-row">
+              <label>Type</label>
+              <select id="paramStorageType" style="grid-column: span 2;">
+                <option value="water_thermal_mass">Water Thermal Storage Drums</option>
+                <option value="concrete_trombe">Concrete Trombe Mass</option>
+                <option value="bio_pcm_21">Bio-Based PCM (21°C)</option>
+                <option value="inorganic_salt_23">Salt Hydrate PCM (23°C)</option>
+                <option value="none">None (Air Heating Only)</option>
+              </select>
+            </div>
+            <div class="param-row">
+              <label>Storage Mass</label>
+              <input type="range" id="paramStorageMass" min="0" max="2500" step="50" value="500" />
+              <input type="number" id="paramStorageMassNum" value="500" step="50" />
+            </div>
+          </div>
+
+          <!-- Internal Heat Gains -->
+          <div class="param-group">
+            <div class="param-group-title">👥 Internal Heat Gains</div>
+            <div class="param-row">
+              <label>Occupants</label>
+              <input type="range" id="paramOccupants" min="0" max="8" step="1" value="2" />
+              <input type="number" id="paramOccupantsNum" value="2" step="1" />
+            </div>
+            <div class="param-row">
+              <label>Equipment</label>
+              <input type="range" id="paramEquip" min="0" max="300" step="10" value="50" />
+              <input type="number" id="paramEquipNum" value="50" step="10" />
+            </div>
+            <div class="param-row">
+              <label>Lighting</label>
+              <input type="range" id="paramLighting" min="0" max="100" step="5" value="20" />
+              <input type="number" id="paramLightingNum" value="20" step="5" />
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; margin-top: 4px;">
+              <span>Total Internal Gain:</span>
+              <strong id="totalInternalGainBadge" style="color: var(--accent-amber);">220 W</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="params-action-bar">
+          <button id="btnResetDesign" class="btn-reset-design">Reset</button>
+          <button id="btnUpdateDesign" class="btn-update-design">Update Design</button>
+        </div>
+      </div>
+
+      <!-- 2. Implementation Plan (BoQ) -->
+      <div class="eng-card">
+        <div class="eng-card-header">
+          <div class="header-title">📋 Implementation Plan (BoQ)</div>
+          <span style="font-size: 11px; color: var(--text-muted);">SHELTER-001</span>
+        </div>
+
+        <div class="boq-table-wrap">
+          <table class="eng-table">
+            <thead>
+              <tr>
+                <th style="width: 25px;">#</th>
+                <th>Component</th>
+                <th>Material / Specification</th>
+                <th>Quantity</th>
+                <th>Unit</th>
+              </tr>
+            </thead>
+            <tbody id="boqTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="boq-logistics-bar" id="boqLogisticsSummary">
+          <!-- High altitude logistics info -->
+        </div>
+      </div>
+
+      <!-- 3. Technical Drawings -->
+      <div class="eng-card">
+        <div class="eng-card-header">
+          <div class="header-title">📐 Technical Drawings</div>
+          <span style="font-size: 11px; color: var(--accent-blue);">Parametric CAD</span>
+        </div>
+
+        <div class="cad-tabs">
+          <div class="cad-tab active" data-view="plan">Plan View</div>
+          <div class="cad-tab" data-view="front">Front Elevation</div>
+          <div class="cad-tab" data-view="side">Side Elevation</div>
+          <div class="cad-tab" data-view="section">Section</div>
+        </div>
+
+        <div class="cad-canvas-wrap">
+          <canvas id="cadCanvas" width="440" height="240"></canvas>
+        </div>
+
+        <div class="cad-actions-bar">
+          <button id="btnDownloadDrawing" class="btn-cad">📥 Download Drawing</button>
+          <button id="btnExportSTL" class="btn-cad">⚙️ Export CAD (STL)</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==========================================================
+       TAB 3: SIMULATION
+       ========================================================== -->
+  <main id="view-simulation" class="app-page-view">
+    <div class="screen-title-section" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h1 class="screen-h1">Transient Thermal Simulation Engine</h1>
+        <p class="screen-sub">Lumped-capacitance energy balance across 24-hour diurnal cold cycle in Ladakh.</p>
+      </div>
+      <button id="btnRunSimMain" class="btn-update-design" style="padding: 10px 24px;">▶ Re-run Simulation</button>
+    </div>
+
+    <!-- 6 KPI boxes -->
+    <div class="metrics-kpi-row">
+      <div class="kpi-metric-box">
+        <div class="label">Minimum Indoor Temp</div>
+        <div class="val cold" id="simMinTemp">-4.2°C</div>
+      </div>
+      <div class="kpi-metric-box">
+        <div class="label">Peak Daytime Temp</div>
+        <div class="val warm" id="simMaxTemp">+18.5°C</div>
+      </div>
+      <div class="kpi-metric-box">
+        <div class="label">Solar Heat Captured</div>
+        <div class="val warm" id="simSolarGain">18.4 kWh/day</div>
+      </div>
+      <div class="kpi-metric-box">
+        <div class="label">Envelope Heat Loss</div>
+        <div class="val" id="simHeatLoss">36.2 kWh/day</div>
+      </div>
+      <div class="kpi-metric-box">
+        <div class="label">Aux Heating Needed</div>
+        <div class="val" id="simAuxEnergy">19.8 kWh/day</div>
+      </div>
+      <div class="kpi-metric-box">
+        <div class="label">Kerosene Avoided</div>
+        <div class="val green" id="simKeroseneSaved">12.5 L/day</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid-2">
+      <div class="eng-card">
+        <div class="eng-card-header">
+          <div class="header-title">🌡️ 24-Hour Indoor vs Ambient Temperature Profile</div>
+        </div>
+        <div style="flex: 1; padding: 12px; position: relative;">
+          <canvas id="chartTempProfile"></canvas>
+        </div>
+      </div>
+
+      <div class="eng-card">
+        <div class="eng-card-header">
+          <div class="header-title">⚡ Instantaneous Thermal Rate (W): Solar Gain vs Losses</div>
+        </div>
+        <div style="flex: 1; padding: 12px; position: relative;">
+          <canvas id="chartEnergyFlux"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="eng-card" style="margin-top: 16px; height: 260px;">
+      <div class="eng-card-header">
+        <div class="header-title">🔋 Thermal Storage Flux & Auxiliary Heat Deficit</div>
+      </div>
+      <div style="flex: 1; padding: 12px; position: relative;">
+        <canvas id="chartStorageState"></canvas>
+      </div>
+    </div>
+
+    <!-- ==========================================================
+         AD RECOMMENDATIONS — High Altitude Design Intelligence
+         ========================================================== -->
+    <section id="adRecommendations" class="ad-rec-section">
+      <div class="eng-card" style="margin-top: 20px;">
+        <div class="eng-card-header" style="justify-content: space-between;">
+          <div class="header-title">🧠 AI Design Recommendations — High-Altitude Shelter</div>
+          <span id="recAIBadge" class="rec-ai-badge">Rule Engine</span>
+        </div>
+
+        <!-- Summary Banner -->
+        <div id="recSummaryBanner" class="rec-summary-banner rec-status-info">
+          <div>Run a simulation to generate recommendations.</div>
+        </div>
+
+        <!-- Radar Chart + Cards Grid -->
+        <div class="rec-layout">
+          <!-- Radar Chart -->
+          <div class="rec-chart-wrap">
+            <canvas id="recRadarChart"></canvas>
+          </div>
+
+          <!-- Detail Cards -->
+          <div id="recDetailsGrid" class="rec-details-grid">
+            <!-- Populated dynamically by ADRecommendations.render() -->
+            <div class="rec-card rec-card-placeholder">
+              <div class="rec-card-icon">🧱</div>
+              <div class="rec-card-body">
+                <div class="rec-card-title">Wall Block</div>
+                <div class="rec-card-value">—</div>
+                <div class="rec-card-detail">Awaiting simulation data</div>
+              </div>
+            </div>
+            <div class="rec-card rec-card-placeholder">
+              <div class="rec-card-icon">📐</div>
+              <div class="rec-card-body">
+                <div class="rec-card-title">Wall Thickness</div>
+                <div class="rec-card-value">—</div>
+                <div class="rec-card-detail">Awaiting simulation data</div>
+              </div>
+            </div>
+            <div class="rec-card rec-card-placeholder">
+              <div class="rec-card-icon">🛡️</div>
+              <div class="rec-card-body">
+                <div class="rec-card-title">Insulation</div>
+                <div class="rec-card-value">—</div>
+                <div class="rec-card-detail">Awaiting simulation data</div>
+              </div>
+            </div>
+            <div class="rec-card rec-card-placeholder">
+              <div class="rec-card-icon">🪟</div>
+              <div class="rec-card-body">
+                <div class="rec-card-title">Glazing</div>
+                <div class="rec-card-value">—</div>
+                <div class="rec-card-detail">Awaiting simulation data</div>
+              </div>
+            </div>
+            <div class="rec-card rec-card-placeholder">
+              <div class="rec-card-icon">🛢️</div>
+              <div class="rec-card-body">
+                <div class="rec-card-title">Thermal Storage</div>
+                <div class="rec-card-value">—</div>
+                <div class="rec-card-detail">Awaiting simulation data</div>
+              </div>
+            </div>
+            <div class="rec-card rec-card-placeholder">
+              <div class="rec-card-icon">☀️</div>
+              <div class="rec-card-body">
+                <div class="rec-card-title">Solar PV</div>
+                <div class="rec-card-value">—</div>
+                <div class="rec-card-detail">Awaiting simulation data</div>
+              </div>
+            </div>
+            <div class="rec-card rec-card-placeholder">
+              <div class="rec-card-icon">🏠</div>
+              <div class="rec-card-body">
+                <div class="rec-card-title">Roof Design</div>
+                <div class="rec-card-value">—</div>
+                <div class="rec-card-detail">Awaiting simulation data</div>
+              </div>
+            </div>
+            <div class="rec-card rec-card-placeholder">
+              <div class="rec-card-icon">💨</div>
+              <div class="rec-card-body">
+                <div class="rec-card-title">Ventilation</div>
+                <div class="rec-card-value">—</div>
+                <div class="rec-card-detail">Awaiting simulation data</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================================
+       TAB 4: OPTIMIZATION
+       ========================================================== -->
+  <main id="view-optimization" class="app-page-view">
+    <div class="screen-title-section" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h1 class="screen-h1">Multi-Objective Parametric Optimization</h1>
+        <p class="screen-sub">Automated design exploration minimizing auxiliary heating while respecting airlift logistics weight limits.</p>
+      </div>
+      <button id="btnRunOptimization" class="btn-update-design" style="padding: 10px 24px;">▶ Run Parametric Search</button>
+      <button id="btnApplyBestDesign" class="btn-cad" style="padding: 10px 18px; margin-left: 8px;">Apply Best Design</button>
+    </div>
+
+    <!-- Notification Banner when Best Design Applied -->
+    <div id="optimizationAppliedBanner" style="display: none; margin-bottom: 16px;"></div>
+
+    <div class="optimization-grid" id="optimizationCandidateGrid">
+      <!-- Populated dynamically by optimizer.js -->
+    </div>
+  </main>
+
+  <!-- ==========================================================
+       TAB 5: DESIGN SANDBOX (WHAT-IF LAB)
+       ========================================================== -->
+  <main id="view-sandbox" class="app-page-view">
+    <div class="screen-title-section">
+      <h1 class="screen-h1">Design Sandbox / What-If Sensitivity Lab</h1>
+      <p class="screen-sub">Isolate individual envelope interventions and observe real-time marginal thermal deltas.</p>
+    </div>
+
+    <div class="sandbox-layout">
+      <!-- Intervention Toggles -->
+      <div class="eng-card">
+        <div class="eng-card-header">
+          <div class="header-title">🛠️ Active Interventions</div>
+          <span id="sbActiveCount" style="font-size: 11px; color: var(--accent-amber);">0 Active</span>
+        </div>
+        <div style="padding: 8px;">
+          <div class="sandbox-toggle-row">
+            <div>
+              <strong>Wall Insulation (+50mm PUF)</strong>
+              <div style="font-size: 10.5px; color: var(--text-muted);">U-value drops to 0.16 W/m²K</div>
+            </div>
+            <input type="checkbox" class="sandbox-toggle" data-item="wall_insulation" />
+          </div>
+
+          <div class="sandbox-toggle-row">
+            <div>
+              <strong>Upgrade to Triple Low-E Glazing</strong>
+              <div style="font-size: 10.5px; color: var(--text-muted);">Krypton-filled U=0.75 W/m²K</div>
+            </div>
+            <input type="checkbox" class="sandbox-toggle" data-item="triple_glazing" />
+          </div>
+
+          <div class="sandbox-toggle-row">
+            <div>
+              <strong>Add 400kg Bio-PCM (21°C) Storage</strong>
+              <div style="font-size: 10.5px; color: var(--text-muted);">Latent heat buffer keeps overnight min high</div>
+            </div>
+            <input type="checkbox" class="sandbox-toggle" data-item="bio_pcm" />
+          </div>
+
+          <div class="sandbox-toggle-row">
+            <div>
+              <strong>Insulate Floor Perimeter (100mm XPS)</strong>
+              <div style="font-size: 10.5px; color: var(--text-muted);">Decouples from frozen permafrost subgrade</div>
+            </div>
+            <input type="checkbox" class="sandbox-toggle" data-item="floor_insulation" />
+          </div>
+
+          <div class="sandbox-toggle-row">
+            <div>
+              <strong>Airtight Membrane Sealing</strong>
+              <div style="font-size: 10.5px; color: var(--text-muted);">Reduces infiltration from 1.0 to 0.3 ACH</div>
+            </div>
+            <input type="checkbox" class="sandbox-toggle" data-item="airtight_sealing" />
+          </div>
+
+          <div class="sandbox-toggle-row">
+            <div>
+              <strong>Expand South Glazing (+1.5 m²)</strong>
+              <div style="font-size: 10.5px; color: var(--text-muted);">Boosts daytime solar radiation aperture</div>
+            </div>
+            <input type="checkbox" class="sandbox-toggle" data-item="expand_south_glazing" />
+          </div>
+
+          <div style="padding: 10px; text-align: right;">
+            <button id="btnResetSandbox" class="btn-reset-design">Clear All Interventions</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Marginal Impact Summary & Tornado Chart -->
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="eng-card" style="padding: 16px;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--accent-blue); margin-bottom: 12px;">MARGINAL THERMAL DELTA VS BASELINE</div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center;">
+            <div class="kpi-metric-box">
+              <div class="label">Δ Min Indoor Temp</div>
+              <div class="val" id="sbDeltaTMin">0.0°C</div>
+            </div>
+            <div class="kpi-metric-box">
+              <div class="label">Δ Daily Heat Loss</div>
+              <div class="val" id="sbDeltaLoss">0.0 kWh/day</div>
+            </div>
+            <div class="kpi-metric-box">
+              <div class="label">Δ Aux Energy Needed</div>
+              <div class="val" id="sbDeltaAux">0.0 kWh/day</div>
+            </div>
+            <div class="kpi-metric-box">
+              <div class="label">Predicted Min Temp</div>
+              <div class="val" id="sbModMinTemp">-4.2°C</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="eng-card" style="flex: 1; min-height: 280px;">
+          <div class="eng-card-header">
+            <div class="header-title">🌪️ Parameter Sensitivity Ranking (Tornado Analysis)</div>
+          </div>
+          <div style="flex: 1; padding: 12px; position: relative;">
+            <canvas id="chartTornadoSensitivity"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==========================================================
+       TAB 6: VALIDATION
+       ========================================================== -->
+  <main id="view-validation" class="app-page-view">
+    <div class="screen-title-section" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <h1 class="screen-h1">Scientific Model Validation & FEA Verification</h1>
+        <p class="screen-sub">Verification of SOLARTHERM transient algorithms against Closed-form Fourier conduction and ANSYS Mechanical APDL.</p>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button id="btnRunValidation" class="btn-update-design" style="padding: 8px 18px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+          <span>⚡</span>
+          <span>Re-calculate Benchmark</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="charts-grid-2">
+      <div class="eng-card">
+        <div class="eng-card-header">
+          <div class="header-title">📊 SOLARTHERM vs ANSYS Mechanical Transient Trajectory</div>
+          <span id="valActiveProfileBadge" class="status-badge status-ready">LIVE FEA BENCHMARK</span>
+        </div>
+        <div style="flex: 1; padding: 12px; position: relative;">
+          <canvas id="chartValidationCompare"></canvas>
+        </div>
+      </div>
+
+      <div class="eng-card">
+        <div class="eng-card-header">
+          <div class="header-title">📋 Statistical Error Benchmarks (Live vs FEA)</div>
+          <span id="valModelSyncTime" style="font-size: 10px; color: var(--text-muted); font-family: var(--font-mono);">Auto-Synced</span>
+        </div>
+        <div style="padding: 14px;">
+          <div id="valLiveContextBanner" style="font-size: 11px; padding: 6px 10px; background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.25); border-radius: 4px; color: #38bdf8; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <span>🔬</span>
+            <span id="valContextText">Validation synchronized to current design and climate parameters</span>
+          </div>
+          <table class="report-table">
+            <thead>
+              <tr><th>Benchmark Metric</th><th>Value</th><th>Permissible Limit</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Mean Absolute Error (MAE)</td><td><strong id="valMAE">0.82°C</strong></td><td>&lt; 1.50°C</td><td><span id="valMaeStatus" style="color:#10b981; font-weight: 600;">✓ PASS</span></td></tr>
+              <tr><td>Root Mean Square Error (RMSE)</td><td><strong id="valRMSE">1.05°C</strong></td><td>&lt; 2.00°C</td><td><span id="valRmseStatus" style="color:#10b981; font-weight: 600;">✓ PASS</span></td></tr>
+              <tr><td>Peak Point Deviation</td><td><strong id="valPeakDev">1.48°C</strong></td><td>&lt; 2.50°C</td><td><span id="valPeakStatus" style="color:#10b981; font-weight: 600;">✓ PASS</span></td></tr>
+              <tr><td>Pearson Correlation Coefficient (R²)</td><td><strong id="valR2">0.988</strong></td><td>&gt; 0.950</td><td><span id="valR2Status" style="color:#10b981; font-weight: 600;">✓ HIGH ACCURACY</span></td></tr>
+              <tr><td>Analytical Fourier 1D Discrepancy</td><td><strong id="valFourier">0.04%</strong></td><td>&lt; 0.10%</td><td><span id="valFourierStatus" style="color:#10b981; font-weight: 600;">✓ EXACT MATCH</span></td></tr>
+            </tbody>
+          </table>
+
+          <div style="margin-top: 16px; font-size: 11.5px; color: var(--text-secondary); line-height: 1.6; background: rgba(7,12,24,0.6); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <strong>Methodology Note:</strong> The SOLARTHERM fast decision-support layer is verified dynamically against full 3D 8-node thermal solid elements (SOLID70) with time-stepped surface convection and solar absorption fluxes. 1-click APDL script export generates exact macros matching current shelter dimensions and insulation.
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==========================================================
+       TAB 7: REPORT (PRINTABLE ENGINEERING DOSSIER)
+       ========================================================== -->
+  <main id="view-report" class="app-page-view">
+    <div class="screen-title-section" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h1 class="screen-h1">Engineering Dossier & Technical Specification</h1>
+        <p class="screen-sub">Formal documentation ready for design reviews, logistical procurement, and academic evaluation.</p>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button id="btnDownloadHtmlReport" class="btn-cad" style="border-color: rgba(255,255,255,0.2); padding: 10px 18px; font-size: 12px; cursor: pointer;">💾 Download Clean Dossier</button>
+        <button id="btnPrintReport" class="btn-update-design" style="padding: 10px 22px; cursor: pointer;">🖨️ Print / Save as PDF</button>
+      </div>
+    </div>
+
+    <div id="engineeringReportContainer">
+      <!-- Populated dynamically by report.js -->
+    </div>
+  </main>
+
+  <!-- ==========================================================
+       TAB 8: AI AGENT — SOLARTHERM THERMAL INTELLIGENCE
+       ========================================================== -->
+  <main id="view-ai-agent" class="app-page-view">
+    <div class="screen-title-section" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h1 class="screen-h1">🤖 SOLARTHERM AI — Thermal Intelligence Assistant</h1>
+        <p class="screen-sub">Offline AI agent powered by the AD Recommendations engine. Reads live simulation data to give physics-based shelter design advice.</p>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <div class="ai-online-dot"></div>
+        <span style="font-size: 11px; color: var(--accent-green); font-weight: 600;">AI ONLINE</span>
+        <span style="font-size: 10px; color: var(--text-muted);">· No API key · Fully offline · SIH26051</span>
+      </div>
+    </div>
+
+    <div class="ai-agent-layout">
+      <!-- Left: Insight Cards -->
+      <div class="ai-insights-panel">
+        <div class="ai-insights-title">⚡ Live Design Insights</div>
+        <div id="aiInsightCardsContainer">
+          <div class="ai-insight-placeholder">⚙️ Loading insights…</div>
+        </div>
+      </div>
+
+      <!-- Right: Chat Panel -->
+      <div class="ai-chat-panel">
+        <!-- Chat Header -->
+        <div class="ai-chat-header">
+          <div class="ai-chat-brand">
+            <div class="ai-chat-logo">▲</div>
+            <div>
+              <div class="ai-chat-name">SOLARTHERM AI</div>
+              <div class="ai-chat-sub">Thermal Shelter Intelligence · SIH26051 · Adarsh Gram</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 10.5px; color: var(--text-muted);">Intent-based · Physics-powered · Offline</span>
+            <button id="aiAgentClearBtn">🗑️ Clear</button>
+          </div>
+        </div>
+
+        <!-- Chat Feed -->
+        <div id="aiChatFeed"></div>
+
+        <!-- Quick Ask Chips -->
+        <div class="ai-chip-row">
+          <button class="ai-suggestion-chip" data-question="Is my shelter warm enough?">🌡️ Is shelter warm enough?</button>
+          <button class="ai-suggestion-chip" data-question="What wall material should I use?">🧱 Best wall material?</button>
+          <button class="ai-suggestion-chip" data-question="How much solar panel do I need?">☀️ Solar PV sizing</button>
+          <button class="ai-suggestion-chip" data-question="Is my thermal storage sufficient?">🔋 Thermal mass check</button>
+          <button class="ai-suggestion-chip" data-question="Give me a full design summary">📊 Design summary</button>
+          <button class="ai-suggestion-chip" data-question="How do I export the PDF report?">📄 PDF export</button>
+          <button class="ai-suggestion-chip" data-question="How does altitude affect my design?">🏔️ Altitude effects</button>
+          <button class="ai-suggestion-chip" data-question="Analyse my glazing">🪟 Glazing analysis</button>
+        </div>
+
+        <!-- Input Row -->
+        <div class="ai-input-row">
+          <textarea id="aiAgentInput" placeholder="Ask me anything about your shelter design, thermal performance, materials, or solar sizing…" rows="1"></textarea>
+          <button id="aiAgentSendBtn">Send ↑</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- (Pitch Deck removed — replaced by AI Agent tab above) -->
+  <div id="pitchDeckModal" class="pitch-modal-overlay" style="display:none !important;">
+    <div class="pitch-deck-container">
+      <div class="pitch-deck-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="brand-logo-icon">▲</div>
+          <strong style="color: var(--text-primary);">SOLARTHERM · Smart India Hackathon 2026 (SIH26051)</strong>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <span id="pitchSlideCounter" style="font-family: var(--font-mono); font-size: 12px; color: var(--accent-amber);">1 / 5</span>
+          <button id="btnClosePitchMode" class="btn-reset-design" style="padding: 4px 10px;">✕ Close</button>
+        </div>
+      </div>
+
+      <!-- Slide 1: The Problem -->
+      <div id="pitchSlide1" class="pitch-slide active">
+        <div style="color: var(--accent-amber); font-weight: 700; font-size: 14px; text-transform: uppercase;">Problem Statement SIH26051</div>
+        <h2 style="font-size: 28px; margin: 8px 0 16px; color: #ffffff;">DESIGN THE SHELTER. NOT THE HEATER.</h2>
+        <p style="font-size: 15px; color: var(--text-secondary); max-width: 800px; line-height: 1.7;">
+          In high-altitude Himalayan cold deserts like Ladakh, winter ambient temperatures plunge to <strong>-22°C to -35°C</strong>.
+          Conventional shelters rely on massive fossil kerosene and diesel heating — burning thousands of liters per season,
+          generating dangerous indoor carbon monoxide, and placing an immense logistical burden on airlift helicopters (Mi-17).
+        </p>
+        <div style="margin-top: 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;">
+          <div class="kpi-metric-box">
+            <div class="label">Ambient Winter Low</div>
+            <div class="val cold">-35°C</div>
+          </div>
+          <div class="kpi-metric-box">
+            <div class="label">Solar Resource Available</div>
+            <div class="val warm">5.5 kWh/m²/day</div>
+          </div>
+          <div class="kpi-metric-box">
+            <div class="label">Fuel Reduction Target</div>
+            <div class="val green">80% - 90%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: The Solution -->
+      <div id="pitchSlide2" class="pitch-slide">
+        <div style="color: var(--accent-blue); font-weight: 700; font-size: 14px;">THE THERMODYNAMIC ENGINE</div>
+        <h2 style="font-size: 26px; margin: 8px 0 16px; color: #ffffff;">CAPTURE → STORE → RETAIN → OPTIMIZE</h2>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.7;">
+          SOLARTHERM transforms solar radiation from an electrical panel afterthought into the central passive thermal engine:
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 20px;">
+          <div class="eng-card" style="padding: 14px;">
+            <div style="font-size: 24px; margin-bottom: 6px;">☀️</div>
+            <strong style="color: var(--accent-amber);">1. CAPTURE</strong>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Optimized south glazing with snow albedo reflection gain.</p>
+          </div>
+          <div class="eng-card" style="padding: 14px;">
+            <div style="font-size: 24px; margin-bottom: 6px;">🔋</div>
+            <strong style="color: var(--accent-blue);">2. STORE</strong>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Water tanks and Bio-PCM latent heat storage buffering night drops.</p>
+          </div>
+          <div class="eng-card" style="padding: 14px;">
+            <div style="font-size: 24px; margin-bottom: 6px;">🛡️</div>
+            <strong style="color: #10b981;">3. RETAIN</strong>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Continuous high-R PUF/XPS envelope and air-tight thermal airlocks.</p>
+          </div>
+          <div class="eng-card" style="padding: 14px;">
+            <div style="font-size: 24px; margin-bottom: 6px;">⚡</div>
+            <strong style="color: #f59e0b;">4. OPTIMIZE</strong>
+            <p style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Parametric search balances solar gain against nighttime conductive loss.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Parametric 3D Digital Twin -->
+      <div id="pitchSlide3" class="pitch-slide">
+        <div style="color: var(--accent-blue); font-weight: 700; font-size: 14px;">FEATURE HIGHLIGHT</div>
+        <h2 style="font-size: 26px; margin: 8px 0 16px; color: #ffffff;">Browser-Based 3D Digital Shelter Twin</h2>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.7;">
+          Judge changes a single parameter (length, wall thickness, glazing, thermal mass), and the entire engineering pipeline responds:
+          3D mesh updates, Component Inspector displays physical properties, BoQ recalculates deadweight, 2D architectural CAD drawings re-render, and simulation re-solves.
+        </p>
+        <div style="margin-top: 24px;">
+          <button class="pitch-jump-btn btn-update-design" data-target-tab="designer">🚀 Jump to Live 3D Designer</button>
+        </div>
+      </div>
+
+      <!-- Slide 4: Scientific Validation -->
+      <div id="pitchSlide4" class="pitch-slide">
+        <div style="color: var(--accent-amber); font-weight: 700; font-size: 14px;">ACADEMIC & SCIENTIFIC RIGOR</div>
+        <h2 style="font-size: 26px; margin: 8px 0 16px; color: #ffffff;">Honest Physics & ANSYS Mechanical Benchmarking</h2>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.7;">
+          Unlike static mockups or unverified claims, SOLARTHERM models altitude air density derating, apparent heat capacity phase transitions, and provides 1-click export of ANSYS APDL `.mac` input scripts for FEA validation.
+        </p>
+        <div style="margin-top: 24px;">
+          <button class="pitch-jump-btn btn-update-design" data-target-tab="validation">🔬 View Validation Suite</button>
+        </div>
+      </div>
+
+      <!-- Slide 5: Hackathon Impact -->
+      <div id="pitchSlide5" class="pitch-slide">
+        <div style="color: #10b981; font-weight: 700; font-size: 14px;">SUMMARY & CONCLUSION</div>
+        <h2 style="font-size: 26px; margin: 8px 0 16px; color: #ffffff;">Deployable Thermal Intelligence for SIH26051</h2>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.7;">
+          SOLARTHERM delivers an end-to-end engineering workflow: Climate Intelligence → 3D Parametric Twin → Transient Simulation → Optimization → BoQ & Logistics → Printable Engineering Dossier.
+        </p>
+        <div style="margin-top: 24px; display: flex; gap: 12px;">
+          <button class="pitch-jump-btn btn-update-design" data-target-tab="report">📄 Open Engineering Report</button>
+          <button class="pitch-jump-btn btn-cad" data-target-tab="designer">🏠 Back to Shelter Designer</button>
+        </div>
+      </div>
+
+      <div class="pitch-deck-footer">
+        <button id="btnPitchPrev" class="btn-cad">← Previous Slide</button>
+        <button id="btnPitchNext" class="btn-update-design">Next Slide →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================
+       ASSUMPTIONS DRAWER
+       ========================================================== -->
+  <aside id="assumptionsDrawer" class="assumptions-drawer">
+    <div class="drawer-header">
+      <div style="font-weight: 700; color: var(--accent-blue); font-size: 14px;">PHYSICS ASSUMPTIONS & EQUATIONS</div>
+      <button id="btnCloseAssumptions" class="btn-reset-design" style="padding: 2px 8px;">✕</button>
+    </div>
+    <div class="drawer-body">
+      <h4 style="color: #ffffff; margin-bottom: 6px;">1. Transient Energy Conservation</h4>
+      <p>$$C_{eff} \frac{dT_{in}}{dt} = Q_{solar} + Q_{int} - \sum UA (T_{in} - T_{amb}) - Q_{inf} - Q_{storage}$$</p>
+      <p>Solved using explicit forward Euler numerical integration at \(\Delta t = 300\text{ s}\) across 3 consecutive diurnal warm-up cycles to achieve steady-periodic state.</p>
+
+      <h4 style="color: #ffffff; margin: 16px 0 6px;">2. High Altitude Air Properties</h4>
+      <p>At 3,505m elevation (Leh, Ladakh):</p>
+      <p>$$P = 66.5\text{ kPa}, \quad \rho_{air} = 0.85\text{ kg/m}^3$$</p>
+      <p>Air density derating reduces the volumetric heat capacity of infiltration air compared to sea-level design standards.</p>
+
+      <h4 style="color: #ffffff; margin: 16px 0 6px;">3. Ground Snow Albedo</h4>
+      <p>Ground snow reflectance is modeled with albedo \(\rho_g = 0.60\), enhancing solar irradiance on the vertical south facade by up to 25% during clear winter days.</p>
+
+      <h4 style="color: #ffffff; margin: 16px 0 6px;">4. Phase Change Material (PCM)</h4>
+      <p>Apparent heat capacity method simulates latent enthalpy absorption over a \(3.0^\circ\text{C}\) melting interval around nominal transition temperature (\(21^\circ\text{C}\)).</p>
+
+      <h4 style="color: #ffffff; margin: 16px 0 6px;">5. Model Limitations</h4>
+      <p>Reduced-order model assumes well-mixed air temperature. Detailed structural corner thermal bridging and microclimate turbulent eddies require full 3D CFD/FEA refinement.</p>
+    </div>
+  </aside>
+
+  <!-- ==========================================================
+       APP FOOTER
+       ========================================================== -->
+  <footer class="app-footer">
+    <div>SOLARTHERM · SIH26051 · Passive Thermal Design for a Warmer Tomorrow</div>
+    <div>Model: v1.0.0 · Data: NASA POWER (Verified) · 05 Sep 2026</div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/materials.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/shelter3d.js"></script>
+  <script src="js/designer-ui.js"></script>
+  <script src="js/weather-forecast.js"></script>
+  <script src="js/climate.js"></script>
+  <script src="js/thermal-model.js"></script>
+  <script src="js/ad-recommendations.js"></script>
+  <script src="js/simulation-ui.js"></script>
+  <script src="js/optimizer.js"></script>
+  <script src="js/sandbox.js"></script>
+  <script src="js/validation.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/pitch-deck.js"></script>
+  <script src="js/theme-toggle.js"></script>
+  <script src="js/ai-agent.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

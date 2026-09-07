@@ -1,0 +1,174 @@
+/* ==========================================================
+   SOLARTHERM SIH26051 — Design Token System v2.0
+   Vibrant Professional Palette · Typography Hierarchy
+   DRDO-Grade Engineering Interface
+   ========================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* ----------------------------------------------------------
+     TYPOGRAPHY
+     ---------------------------------------------------------- */
+  --font-display:  'Outfit', sans-serif;        /* KPI values, H1, brand */
+  --font-ui:       'Inter', sans-serif;          /* Body, labels, nav, tables */
+  --font-mono:     'JetBrains Mono', monospace;  /* Coordinates, IDs, numbers */
+  --font-sans:     var(--font-ui);               /* Alias for legacy code */
+  --font-mono-alt: var(--font-mono);             /* Alias for legacy code */
+
+  --text-2xs:  9px;
+  --text-xs:  10.5px;
+  --text-sm:  12px;
+  --text-md:  13.5px;
+  --text-base: 14px;
+  --text-lg:  16px;
+  --text-xl:  18px;
+  --text-2xl: 22px;
+  --text-3xl: 28px;
+  --text-4xl: 36px;
+
+  --fw-normal:   400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+  --fw-extrabold:800;
+
+  --leading-tight:  1.25;
+  --leading-snug:   1.4;
+  --leading-normal: 1.6;
+
+  /* ----------------------------------------------------------
+     COLOR PALETTE — Vibrant Professional
+     ---------------------------------------------------------- */
+
+  /* Backgrounds */
+  --color-bg-primary:   #06090f;
+  --color-bg-secondary: #0b1120;
+  --color-bg-surface:   rgba(11, 20, 38, 0.82);
+  --color-bg-elevated:  rgba(15, 25, 48, 0.90);
+  --color-bg-overlay:   rgba(6, 9, 15, 0.96);
+
+  /* Borders */
+  --color-border:           rgba(255, 255, 255, 0.08);
+  --color-border-subtle:    rgba(255, 255, 255, 0.04);
+  --color-border-highlight: #0d9488;
+  --color-border-active:    #6366f1;
+
+  /* Text */
+  --color-text-primary:   #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted:     #64748b;
+  --color-text-disabled:  #475569;
+  --color-text-inverse:   #06090f;
+
+  /* Primary Action — Teal */
+  --color-teal:        #0d9488;
+  --color-teal-light:  #14b8a6;
+  --color-teal-dark:   #0f766e;
+  --color-teal-glow:   rgba(13, 148, 136, 0.20);
+  --color-teal-faint:  rgba(13, 148, 136, 0.08);
+
+  /* Accent — Indigo */
+  --color-indigo:      #6366f1;
+  --color-indigo-light:#818cf8;
+  --color-indigo-dark: #4f46e5;
+  --color-indigo-glow: rgba(99, 102, 241, 0.20);
+  --color-indigo-faint:rgba(99, 102, 241, 0.08);
+
+  /* Semantic — Solar/Energy (Amber) */
+  --color-solar:       #f59e0b;
+  --color-solar-light: #fbbf24;
+  --color-solar-dark:  #d97706;
+  --color-solar-glow:  rgba(245, 158, 11, 0.18);
+  --color-solar-faint: rgba(245, 158, 11, 0.06);
+
+  /* Semantic — Cold/Ambient (Sky Blue) */
+  --color-cold:        #38bdf8;
+  --color-cold-light:  #7dd3fc;
+  --color-cold-dark:   #0284c7;
+  --color-cold-faint:  rgba(56, 189, 248, 0.08);
+
+  /* Semantic — Success/Efficient (Green) */
+  --color-success:      #22c55e;
+  --color-success-light:#4ade80;
+  --color-success-dark: #16a34a;
+  --color-success-faint:rgba(34, 197, 94, 0.10);
+
+  /* Semantic — Danger/High Loss (Red) */
+  --color-danger:      #ef4444;
+  --color-danger-light:#f87171;
+  --color-danger-dark: #dc2626;
+  --color-danger-faint:rgba(239, 68, 68, 0.10);
+
+  /* Semantic — Warning/Caution (Orange-Amber) */
+  --color-warning:      #f97316;
+  --color-warning-light:#fb923c;
+  --color-warning-faint:rgba(249, 115, 22, 0.10);
+
+  /* Legacy aliases (backward compatibility) */
+  --color-accent-blue:  var(--color-teal);
+  --color-accent-amber: var(--color-solar);
+  --color-warning-red:  var(--color-danger);
+
+  /* Data-type semantic tokens */
+  --color-simulated:  #6366f1;
+  --color-observed:   #22c55e;
+  --color-forecast:   #38bdf8;
+  --color-historical: #94a3b8;
+  --color-computed:   #f59e0b;
+
+  /* ----------------------------------------------------------
+     SPACING & RADIUS
+     ---------------------------------------------------------- */
+  --spacing-2xs: 2px;
+  --spacing-xs:  4px;
+  --spacing-sm:  8px;
+  --spacing-md:  12px;
+  --spacing-lg:  16px;
+  --spacing-xl:  20px;
+  --spacing-2xl: 28px;
+  --spacing-3xl: 40px;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ----------------------------------------------------------
+     SHADOWS
+     ---------------------------------------------------------- */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.25);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.40), 0 2px 6px rgba(0,0,0,0.30);
+  --shadow-lg:   0 8px 28px rgba(0,0,0,0.50), 0 4px 12px rgba(0,0,0,0.35);
+  --shadow-xl:   0 16px 48px rgba(0,0,0,0.60);
+  --shadow-teal: 0 4px 20px rgba(13, 148, 136, 0.30);
+  --shadow-indigo:0 4px 20px rgba(99, 102, 241, 0.25);
+  --shadow-solar: 0 4px 20px rgba(245, 158, 11, 0.25);
+
+  /* ----------------------------------------------------------
+     TRANSITIONS
+     ---------------------------------------------------------- */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --duration-fast:   150ms;
+  --duration-base:   200ms;
+  --duration-slow:   300ms;
+  --duration-slower: 450ms;
+
+  /* ----------------------------------------------------------
+     Z-INDEX SCALE
+     ---------------------------------------------------------- */
+  --z-below:    -1;
+  --z-base:      0;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-header:   300;
+  --z-modal:    400;
+  --z-tooltip:  500;
+  --z-toast:    600;
+}
